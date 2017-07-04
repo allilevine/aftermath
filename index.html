@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Aftermath</title>
+  <link href="https://fonts.googleapis.com/css?family=Rancho" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <style>
+
+    html {
+      font-family: sans-serif;
+      background: #6B01E8;
+    }
+
+    h1 {
+      margin: 1em auto 0;
+      color: white;
+      text-align: center;
+      font-family: 'Rancho', cursive;
+      font-size: 3em;
+      text-shadow: 5px 5px 0 rgba(0,0,0,0.1);
+    }
+
+     h2 {
+       margin: 1em auto 4em;
+       color: white;
+       font-size: 1em;
+       text-align: center;
+       max-width: 450px;
+     }
+
+    .paper {
+      max-width: 450px;
+      margin: 1em auto;
+    }
+
+    .entries {
+      padding: 0;
+      margin: 0;
+    }
+    .entry {
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.14);
+      transition: height 1s, width 1s;
+      padding: 16px;
+      list-style: none;
+      margin: 0;
+      height: 30px;
+    }
+
+    li.entry:nth-child(even) {
+      transform: perspective(100px) rotateX(3deg) translateY(2px) scale(1.001);
+      background: linear-gradient(to bottom,  #ffffff 0%,#EFEFEF 100%);
+    }
+    li.entry:nth-child(odd) {
+      transform: perspective(100px) rotateX(-3deg) translateY(3px);
+      background: linear-gradient(to top,  #ffffff 0%,#EFEFEF 100%);
+    }
+
+    .entry.folded {
+      height: 10px;
+      text-indent: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .addNew {
+      box-shadow: 0px 5px 0 rgba(0,0,0,0.1);
+      background: white;
+      padding: 16px;
+      height: auto;
+    }
+
+    input {
+      border: none;
+      resize: none;
+      width: 100%;
+      font-size: 1.2em;
+      font-family:'helvetica neue';
+      border-bottom: 1px solid #F1F1F1;
+    }
+
+    button {
+      display: block;
+      margin: 1em auto;
+      font-size: 1.1em;
+      border: 2px solid #000;
+      background: transparent;
+      border-radius: 5px;
+    }
+
+    button.un-fold {
+      border: 2px solid white;
+      color: white;
+    }
+
+    button:disabled, button[disabled] {
+      border: 2px solid gray;
+      color: gray;
+    }
+
+    p {
+      font-size: 1.2em;
+      font-family: 'helvetica neue';
+      border-bottom: 1px solid #F1F1F1;
+    }
+    .hide {
+      display: none;
+    }
+
+  </style>
+
+  <h1>Aftermath</h1>
+  <h2>To play: write a sentence, fold it up, and then pass it on to the next person.</h2>
+
+  <div class="paper">
+    <ul class="entries">
+    </ul>
+    <div class="addNew">
+      <input type="text" placeholder="Type a sentence here." />
+      <button class="fold-up">Fold Up &uparrow; </button>
+    </div>
+  </div>
+
+  <button disabled="true" class="un-fold">Unfold & Read</button>
+
+  <audio data-key="fold" src="sounds/fold.mp3"></audio>
+  <audio data-key="unfold" src="sounds/unfold.mp3"></audio>
+
+  <script>
+    // when you click fold up the input is cleared and the content is added to an array
+    // Unfold button enabled after there are 10 entries, and all of the entries get un-folded on click
+
+    // get the fold up button
+    const foldButton = document.querySelector('button.fold-up');
+    // listen for clicks on the fold button
+    foldButton.addEventListener('click', foldUp);
+    // get the fold up sound
+    const foldSound = document.querySelector('audio[data-key="fold"]');
+
+    // get the input
+    const input = document.querySelector('input');
+    // listen for enter key press
+    input.addEventListener('keypress', checkForEnter);
+    // get the empty entries div where we'll display the entries
+    const entriesUl = document.querySelector('.entries');
+    // get the addNew div
+    const addNew = document.querySelector('.addNew');
+
+    // get the unfold button
+    const unfoldButton = document.querySelector('button.un-fold');
+    // listen for clicks on the unfold button
+    unfoldButton.addEventListener('click', unFold);
+    // get the un-fold sound
+    const unfoldSound = document.querySelector('audio[data-key="unfold"]');
+
+    // create an array for the entries
+    let entries = [];
+
+    // the function that fires when the fold up button is clicked
+    function foldUp(e) {
+      // if we're on the 10th entry and the fold button is clicked, hide the input and enable the unfold button
+      if (entries.length == 9) {
+        addNew.classList.toggle('hide');
+        unfoldButton.disabled = false;
+      }
+      // capture the entered text
+      let newText = input.value;
+      // if there is text, add it to the entries array, clear the input, display the new folded entry, and play the fold sound
+      if (newText) {
+        entries.push(newText);
+        input.value = null;
+        displayEntries();
+        foldSound.play();
+      }
+    }
+
+    function displayEntries() {
+      // define how the array will be displayed with map
+      const entryHtml = entries.map((entry, index) => {
+        if (index == (entries.length - 1)) {
+          return `<li class="entry">${entry}</li>`;
+        } else {
+          return `<li class="entry folded">${entry}</li>`;
+        }
+      }).join('');
+      // add the display to entries
+      entriesUl.innerHTML = entryHtml;
+    }
+
+    function checkForEnter(e) {
+      // if it's the enter key that was pressed, run the foldUp function
+      e.keyCode == 13 ? foldUp() : null;
+    }
+
+    function unFold(e) {
+      // find all entries and remove the folded class
+      const entryDivs = document.querySelectorAll('.entry');
+        entryDivs.forEach(entryDiv => entryDiv.classList.remove('folded'));
+        // play the unfolding sound
+        unfoldSound.play();
+        // hide the unfold button
+        this.classList.toggle('hide');
+    }
+
+  </script>
+</body>
+</html>
